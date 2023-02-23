@@ -29,69 +29,69 @@ from sklearn.cluster import KMeans
 from sklearn.mixture import GaussianMixture
 from sklearn.cluster import DBSCAN, AgglomerativeClustering
 
-# For file handeling operations
+# For file handling operations
 import os
 from glob import glob
 from tqdm import tqdm
 
 # To supress warnings
 import warnings
-
 warnings.filterwarnings("ignore")
 
-# * Change the plotting background to dark
-
+# Change the plotting background to dark
 sns.set_style("dark")
 
-# Absolute path of all the .txt files
-abs_filepaths = glob("BBC News Summary/News Articles/*/*.txt")
 
-# Read it and store it in a list
-news_articles = []
+def read_files():
+    # Absolute path of all the .txt files
+    abs_filepaths = glob("BBC News Summary/News Articles/*/*.txt")
 
-for abs_filepath in tqdm(abs_filepaths, colour='yellow'):
-    try:
-        # Open the file
-        f = open(abs_filepath, "r")
-        # Read the contents of the file
-        news_article = f.read()
-        # Append it in a list
-        news_articles.append(str(news_article))
-    except:
-        f = open(abs_filepath, 'rb')
-        # Read the contents of the file
-        news_article = f.read()
-        # Append it in a list
-        news_articles.append(str(news_article))
+    # Read it and store it in a list
+    news_articles = []
+
+    for abs_filepath in tqdm(abs_filepaths, colour='yellow'):
+        try:
+            # Open the file
+            f = open(abs_filepath, "r")
+            # Read the contents of the file
+            news_article = f.read()
+            # Append it in a list
+            news_articles.append(str(news_article))
+        except:
+            f = open(abs_filepath, 'rb')
+            # Read the contents of the file
+            news_article = f.read()
+            # Append it in a list
+            news_articles.append(str(news_article))
+    return news_articles
 
 
+def clean():
+    articles = []
+    for article in tqdm(news_articles, colour='yellow'):
+        # Replace the end lines <\n>
+        article = article.replace("\\n", '')
+        # Remove all excepth the alphabets
+        article = re.sub("[^a-zA-Z]", ' ', article)
+        # Lower all the aplhabets
+        article = article.lower()
+        # Split the article on spaces, returning a list of words
+        words = article.split()
+        # Remove stopwords
+        clean_article = [ps.stem(word) for word in words if not word in stopwords.words("english")]
+        # Join clean words
+        clean_article = " ".join(clean_article)
+        # Append the tweet
+        articles.append(clean_article)
+    return articles
+
+
+news_articles = read_files()
 # Create a stemmer object which will be used to stem all the words to its root
 ps = PorterStemmer()
 
 # Empty list to store the clean text
-clean_articles = []
-
-for article in tqdm(news_articles, colour='yellow'):
-    # Replace the end lines <\n>
-    article = article.replace("\\n", '')
-
-    # Remove all excepth the alphabets
-    article = re.sub("[^a-zA-Z]", ' ', article)
-
-    # Lower all the aplhabets
-    article = article.lower()
-
-    # Split the article on spaces, returning a list of words
-    words = article.split()
-
-    # Remove stopwords
-    clean_article = [ps.stem(word) for word in words if not word in stopwords.words("english")]
-
-    # Join clean words
-    clean_article = " ".join(clean_article)
-
-    # Append the tweet
-    clean_articles.append(clean_article)
+clean_articles = clean()
 
 # Initialize a vectorizer object
 tfidf = TfidfVectorizer()
@@ -150,7 +150,7 @@ labels = kmeans.labels_
 # Create a dictionary
 df_dict = {"news": news_articles, 'labels_km': labels}
 
-# Convert to dataframe 
+# Convert to dataframe
 df = pd.DataFrame(df_dict)
 
 # Print head
